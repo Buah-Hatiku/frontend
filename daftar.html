@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('img/loginbg.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .register-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .register-form {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px 30px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .register-form h2 {
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+
+    .register-form p {
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .register-form input[type="text"],
+    .register-form input[type="email"],
+    .register-form input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .register-form button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .register-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .register-form a {
+      text-decoration: none;
+      color: #007bff;
+      font-size: 14px;
+    }
+
+    .register-form a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <div class="register-form">
+      <h2>Daftar</h2>
+      <p>Buat akun baru Anda!</p>
+      <form action="#">
+        <input type="text" placeholder="Nama Lengkap" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <input type="password" placeholder="Konfirmasi Password" required>
+        <button type="submit">Daftar</button>
+      </form>
+      <p>Sudah mempunyai akun? <a href="login.html">Masuk</a>.</p>
+    </div>
+  </div>
+</body>
+</html>
