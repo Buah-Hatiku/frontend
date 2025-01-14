@@ -2,49 +2,58 @@
 session_start();
 include '../konfigurasi.php';
 
-// Fungsi untuk mengambil data transaksi
-function getTransactions($pdo)
+// Fungsi untuk mengambil data pembayaran
+function getPaymentProofs($pdo)
 {
-    $query = "SELECT t.*, u.username, p.name AS product_name 
-              FROM transactions t
-              JOIN users u ON t.user_id = u.id
-              JOIN products p ON t.product_id = p.id";
+    $query = "SELECT pp.id, u.username, p.name AS product_name, pp.payment_proof_file, pp.total_price, pp.status, pp.created_at, pp.updated_at
+              FROM payment_proofs pp
+              JOIN users u ON pp.user_id = u.id
+              JOIN products p ON pp.product_id = p.id";
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Fungsi untuk mengubah status transaksi
-function updateTransactionStatus($pdo, $id, $status)
+// Fungsi untuk mengubah status pembayaran
+function updatePaymentProofStatus($pdo, $id, $status)
 {
     try {
-        $query = "UPDATE transactions SET status = :status WHERE id = :id";
+        // Pastikan status valid
+        if (!in_array($status, ['pending', 'approved', 'rejected'])) {
+            throw new Exception('Status tidak valid');
+        }
+
+        $query = "UPDATE payment_proofs SET status = :status, updated_at = NOW() WHERE id = :id";
         $stmt = $pdo->prepare($query);
         $stmt->bindParam(':status', $status, PDO::PARAM_STR);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
+        return true;
     } catch (PDOException $e) {
-        die("Error: " . $e->getMessage());
+        return false;
     }
 }
 
 // Proses jika status diubah
+$message = '';
 if (isset($_POST['update_status'])) {
-    $id = $_POST['transaction_id'];
-    $status = $_POST['status'];
+    $id = intval($_POST['transaction_id']);
+    $status = htmlspecialchars($_POST['status']);
     $pdo = connectDB();
-    updateTransactionStatus($pdo, $id, $status);
-    header("Location: manage_transaksi.php");
-    exit();
+    if (updatePaymentProofStatus($pdo, $id, $status)) {
+        $message = "Status pembayaran berhasil diperbarui!";
+    } else {
+        $message = "Gagal memperbarui status pembayaran.";
+    }
 }
 
-// Ambil data transaksi
+// Ambil data pembayaran
 $pdo = connectDB();
-$transactions = getTransactions($pdo);
+$paymentProofs = getPaymentProofs($pdo);
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
@@ -55,15 +64,22 @@ $transactions = getTransactions($pdo);
 
 <body>
     <div class="container my-5">
-        <h1 class="text-center">Kelola Transaksi</h1>
-         <!-- Tombol Kembali -->
-         <div class="mb-4">
-            <form action="index.php" method="get">
-                <button type="submit" class="btn btn-secondary">Kembali</button>
-            </form>
+        <h1 class="text-center mb-4">Kelola Transaksi</h1>
+
+        <!-- Pesan Feedback -->
+        <?php if ($message): ?>
+            <div class="alert <?= strpos($message, 'berhasil') !== false ? 'alert-success' : 'alert-danger' ?> alert-dismissible fade show" role="alert">
+                <?= $message ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Tombol Kembali -->
+        <div class="mb-4">
+            <a href="index.php" class="btn btn-secondary">Kembali</a>
         </div>
 
-        <!-- Tabel Transaksi -->
+        <!-- Tabel Pembayaran -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
@@ -71,7 +87,6 @@ $transactions = getTransactions($pdo);
                         <th>ID</th>
                         <th>Username</th>
                         <th>Produk</th>
-                        <th>Jumlah</th>
                         <th>Total Harga</th>
                         <th>Status</th>
                         <th>Bukti Pembayaran</th>
@@ -81,31 +96,29 @@ $transactions = getTransactions($pdo);
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($transactions as $transaction): ?>
+                    <?php foreach ($paymentProofs as $paymentProof): ?>
                         <tr>
-                            <td><?= $transaction['id'] ?></td>
-                            <td><?= htmlspecialchars($transaction['username']) ?></td>
-                            <td><?= htmlspecialchars($transaction['product_name']) ?></td>
-                            <td><?= $transaction['quantity'] ?></td>
-                            <td>Rp<?= number_format($transaction['total_price'], 2, ',', '.') ?></td>
-                            <td><?= htmlspecialchars($transaction['status']) ?></td>
+                            <td><?= $paymentProof['id'] ?></td>
+                            <td><?= htmlspecialchars($paymentProof['username']) ?></td>
+                            <td><?= htmlspecialchars($paymentProof['product_name']) ?></td>
+                            <td>Rp<?= number_format($paymentProof['total_price'], 2, ',', '.') ?></td>
+                            <td><?= htmlspecialchars($paymentProof['status']) ?></td>
                             <td>
-                                <?php if ($transaction['payment_proof']): ?>
-                                    <a href="../uploads/<?= htmlspecialchars($transaction['payment_proof']) ?>" target="_blank">Lihat Bukti</a>
+                                <?php if ($paymentProof['payment_proof_file']): ?>
+                                    <a href="../uploads/<?= htmlspecialchars($paymentProof['payment_proof_file']) ?>" target="_blank">Lihat Bukti</a>
                                 <?php else: ?>
                                     Tidak Ada
                                 <?php endif; ?>
                             </td>
-                            <td><?= $transaction['created_at'] ?></td>
-                            <td><?= $transaction['updated_at'] ?></td>
+                            <td><?= $paymentProof['created_at'] ?></td>
+                            <td><?= $paymentProof['updated_at'] ?></td>
                             <td>
                                 <form method="POST" class="d-inline">
-                                    <input type="hidden" name="transaction_id" value="<?= $transaction['id'] ?>">
+                                    <input type="hidden" name="transaction_id" value="<?= $paymentProof['id'] ?>">
                                     <select name="status" class="form-select form-select-sm mb-2" required>
-                                        <option value="menunggu persetujuan" <?= $transaction['status'] == 'menunggu persetujuan' ? 'selected' : '' ?>>Menunggu Persetujuan</option>
-                                        <option value="diproses" <?= $transaction['status'] == 'diproses' ? 'selected' : '' ?>>Diproses</option>
-                                        <option value="selesai" <?= $transaction['status'] == 'selesai' ? 'selected' : '' ?>>Selesai</option>
-                                        <option value="dibatalkan" <?= $transaction['status'] == 'dibatalkan' ? 'selected' : '' ?>>Dibatalkan</option>
+                                        <option value="pending" <?= $paymentProof['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
+                                        <option value="approved" <?= $paymentProof['status'] == 'approved' ? 'selected' : '' ?>>Approved</option>
+                                        <option value="rejected" <?= $paymentProof['status'] == 'rejected' ? 'selected' : '' ?>>Rejected</option>
                                     </select>
                                     <button type="submit" name="update_status" class="btn btn-primary btn-sm">Perbarui</button>
                                 </form>
