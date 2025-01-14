@@ -42,8 +42,3 @@ The frontend is a web-based user interface built with HTML, CSS, and JavaScript.
 
 ---
 
-## Notes
-- Ensure all sensitive data (e.g., database credentials) is secured and not exposed in version control.
-- Test the application in a staging environment before deploying to production.
-
-
