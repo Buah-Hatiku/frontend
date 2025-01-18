@@ -158,8 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'])) {
             <input type="hidden" name="quantity" value="<?php echo htmlspecialchars($quantity); ?>">
             <input type="hidden" name="total_price" value="<?php echo htmlspecialchars($totalPrice); ?>">
             <div class="mb-3">
-                <label for="payment_proof" class="form-label">Upload Bukti Pembayaran</label>
-                <input type="file" class="form-control" id="payment_proof" name="payment_proof" required>
+                <label for="payment_proofs" class="form-label">Upload Bukti Pembayaran</label>
+                <input type="file" class="form-control" id="payment_proofs" name="payment_proofs" required>
             </div>
             <button type="submit" class="btn-upload">Upload Bukti Pembayaran</button>
         </form>

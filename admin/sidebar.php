@@ -98,16 +98,9 @@
           </a>
         </li>
         <li class="nav-item <?= ($current_page == 'charts/charts.html') ? 'active' : '' ?>">
-          <a href="charts/charts.html">
+          <a href="manage_laporan.php">
             <i class="far fa-chart-bar"></i>
             <p>Manage Laporan</p>
-          </a>
-        </li>
-        <li class="nav-item <?= ($current_page == 'charts.php') ? 'active' : '' ?>">
-          <a href="charts.php">
-            <i class="fas fa-desktop"></i>
-            <p>Charts</p>
-            <span class="badge badge-success">4</span>
           </a>
         </li>
         <li class="nav-item <?= ($current_page == 'logout.php') ? 'active' : '' ?>">

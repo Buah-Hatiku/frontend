@@ -1,96 +1,195 @@
 <?php
-// Include konfigurasi database
-require_once 'config.php';
+// manage_users.php
+
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "buahhatiku";
 
 try {
-    // Query untuk mengambil data transaksi dengan informasi tambahan dari tabel users dan produk (jika ada relasi)
-    $query = "
-        SELECT 
-            t.id, 
-            u.username, 
-            t.product_id, 
-            t.status, 
-            t.payment_proof, 
-            t.quantity, 
-            t.total_price, 
-            t.created_at 
-        FROM transactions t
-        JOIN users u ON t.user_id = u.id
-        ORDER BY t.created_at DESC
-    ";
-
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $pdo = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die("Error: " . $e->getMessage());
+    die("Database connection failed: " . $e->getMessage());
 }
+
+// Menghapus pengguna jika ada parameter 'delete' pada URL
+if (isset($_GET['delete']) && isset($_GET['id'])) {
+    $user_id = $_GET['id'];
+
+    // Query untuk menghapus pengguna berdasarkan ID
+    $deleteSql = "DELETE FROM users WHERE id = :id";
+    $stmt = $pdo->prepare($deleteSql);
+
+    try {
+        $stmt->execute([':id' => $user_id]);
+        echo "User deleted successfully.<br>";
+        header("Location: manage_akun.php"); // Redirect ke manage_akun setelah menghapus
+        exit;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+// Insert a new user
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Validasi data formulir
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    $fullname = trim($_POST['fullname']);
+    $address = trim($_POST['address']);
+    $phone_number = trim($_POST['phone_number']);
+    $role = $_POST['role'];
+
+    // Validasi format email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo "Invalid email format.";
+        exit;
+    }
+
+    // Hash password
+    $password = password_hash($password, PASSWORD_BCRYPT);
+
+    // Menyusun query untuk menambah pengguna baru
+    $insertSql = "INSERT INTO users (username, email, password, full_name, address, phone_number, role, created_at, updated_at) 
+                  VALUES (:username, :email, :password, :fullname, :address, :phone_number, :role, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    $stmt = $pdo->prepare($insertSql);
+
+    try {
+        $stmt->execute([ 
+            ':username' => $username,
+            ':email' => $email,
+            ':password' => $password,
+            ':fullname' => $fullname,
+            ':address' => $address,
+            ':phone_number' => $phone_number,
+            ':role' => $role
+        ]);
+        
+        // Redirect ke halaman manage_akun setelah berhasil menambah pengguna
+        header('Location: manage_akun.php');
+        exit;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+// Fetch all users
+$usersSql = "SELECT id, username, email, full_name, address, phone_number, role, created_at, updated_at FROM users";
+$stmt = $pdo->query($usersSql);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Transaksi</title>
+    <title>Manage Users</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container my-5">
-        <h1 class="text-center">Kelola Transaksi</h1>
+        <h1 class="text-center">Manage Users</h1>
 
-        <table class="table table-bordered table-hover mt-4">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Product ID</th>
-                    <th>Status</th>
-                    <th>Bukti Pembayaran</th>
-                    <th>Jumlah</th>
-                    <th>Total Harga</th>
-                    <th>Tanggal Transaksi</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($transactions)): ?>
-                    <?php foreach ($transactions as $transaction): ?>
+        <!-- Tombol Kembali -->
+        <div class="mb-4">
+            <form action="index.php" method="get">
+                <button type="submit" class="btn btn-secondary">Kembali</button>
+            </form>
+        </div>
+        
+        <h2>Add New User</h2>
+        <form action="" method="POST" class="mb-4">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username:</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="fullname" class="form-label">Full Name:</label>
+                <input type="text" id="fullname" name="fullname" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label for="address" class="form-label">Address:</label>
+                <textarea id="address" name="address" class="form-control"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="phone_number" class="form-label">Phone Number:</label>
+                <input type="text" id="phone_number" name="phone_number" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label for="role" class="form-label">Role:</label>
+                <select id="role" name="role" class="form-select">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add User</button>
+        </form>
+
+        <h2>User List</h2>
+        <?php
+        if ($stmt->rowCount() > 0) {
+            echo "<table class='table table-bordered'>
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($transaction['id']) ?></td>
-                            <td><?= htmlspecialchars($transaction['username']) ?></td>
-                            <td><?= htmlspecialchars($transaction['product_id']) ?></td>
-                            <td><?= htmlspecialchars($transaction['status']) ?></td>
-                            <td>
-                                <?php if ($transaction['payment_proof']): ?>
-                                    <a href="uploads/<?= htmlspecialchars($transaction['payment_proof']) ?>" target="_blank">Lihat Bukti</a>
-                                <?php else: ?>
-                                    Tidak ada
-                                <?php endif; ?>
-                            </td>
-                            <td><?= htmlspecialchars($transaction['quantity']) ?></td>
-                            <td>Rp <?= number_format($transaction['total_price'], 2, ',', '.') ?></td>
-                            <td><?= htmlspecialchars($transaction['created_at']) ?></td>
-                            <td>
-                                <a href="edit_transaction.php?id=<?= $transaction['id'] ?>" class="btn btn-primary btn-sm">Edit</a>
-                                <a href="delete_transaction.php?id=<?= $transaction['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?')">Hapus</a>
-                            </td>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Address</th>
+                            <th>Phone Number</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                            <th>Updated At</th>
+                            <th>Actions</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="9" class="text-center">Tidak ada transaksi</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>";
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                echo "<tr>
+                        <td>{$row['id']}</td>
+                        <td>{$row['username']}</td>
+                        <td>{$row['email']}</td>
+                        <td>{$row['full_name']}</td>
+                        <td>{$row['address']}</td>
+                        <td>{$row['phone_number']}</td>
+                        <td>{$row['role']}</td>
+                        <td>{$row['created_at']}</td>
+                        <td>{$row['updated_at']}</td>
+                        <td>
+                            <a href='update_akun.php?id={$row['id']}' class='btn btn-warning btn-sm'>Edit</a> 
+                            <a href='?delete=true&id={$row['id']}' class='btn btn-danger btn-sm' onclick='return confirm(\"Are you sure you want to delete this user?\")'>Delete</a>
+                        </td>
+                    </tr>";
+            }
+
+            echo "</tbody></table>";
+        } else {
+            echo "<p>No users found.</p>";
+        }
+        ?>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
