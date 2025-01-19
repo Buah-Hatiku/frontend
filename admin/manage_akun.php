@@ -92,7 +92,7 @@ $stmt = $pdo->query($usersSql);
 </head>
 <body>
     <div class="container my-5">
-        <h1 class="text-center">Manage Users</h1>
+        <h1 class="text-center">Manage Akun</h1>
 
         <!-- Tombol Kembali -->
         <div class="mb-4">
@@ -101,7 +101,7 @@ $stmt = $pdo->query($usersSql);
             </form>
         </div>
         
-        <h2>Add New User</h2>
+        <h2>Tambahkan Akun Baru</h2>
         <form action="" method="POST" class="mb-4">
             <div class="mb-3">
                 <label for="username" class="form-label">Username:</label>
@@ -119,17 +119,17 @@ $stmt = $pdo->query($usersSql);
             </div>
 
             <div class="mb-3">
-                <label for="fullname" class="form-label">Full Name:</label>
+                <label for="fullname" class="form-label">Nama Lengkap:</label>
                 <input type="text" id="fullname" name="fullname" class="form-control">
             </div>
 
             <div class="mb-3">
-                <label for="address" class="form-label">Address:</label>
+                <label for="address" class="form-label">Alamat:</label>
                 <textarea id="address" name="address" class="form-control"></textarea>
             </div>
 
             <div class="mb-3">
-                <label for="phone_number" class="form-label">Phone Number:</label>
+                <label for="phone_number" class="form-label">Nomor Telepon:</label>
                 <input type="text" id="phone_number" name="phone_number" class="form-control">
             </div>
 
@@ -141,10 +141,10 @@ $stmt = $pdo->query($usersSql);
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary">Add User</button>
+            <button type="submit" class="btn btn-primary">Tambahkan Pengguna</button>
         </form>
 
-        <h2>User List</h2>
+        <h2>Daftar Pengguna</h2>
         <?php
         if ($stmt->rowCount() > 0) {
             echo "<table class='table table-bordered'>

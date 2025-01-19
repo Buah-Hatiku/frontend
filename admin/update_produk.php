@@ -13,15 +13,15 @@ function getProductById($pdo, $id) {
 }
 
 // Fungsi untuk memperbarui produk
-function updateProduct($pdo, $id, $name, $image, $category_id, $price, $quantity, $description) {
+function updateProduct($pdo, $id, $name, $image, $category_id, $price, $stock, $description) {
     try {
         if ($image) {
             $query = "UPDATE products SET name = :name, image = :image, category_id = :category_id, 
-                      price = :price, quantity = :quantity, description = :description, updated_at = NOW() 
+                      price = :price, stock = :stock, description = :description, updated_at = NOW() 
                       WHERE id = :id";
         } else {
             $query = "UPDATE products SET name = :name, category_id = :category_id, 
-                      price = :price, quantity = :quantity, description = :description, updated_at = NOW() 
+                      price = :price, stock = :stock, description = :description, updated_at = NOW() 
                       WHERE id = :id";
         }
         $stmt = $pdo->prepare($query);
@@ -29,7 +29,7 @@ function updateProduct($pdo, $id, $name, $image, $category_id, $price, $quantity
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':category_id', $category_id);
         $stmt->bindParam(':price', $price);
-        $stmt->bindParam(':quantity', $quantity);
+        $stmt->bindParam(':stock', $stock);
         $stmt->bindParam(':description', $description);
 
         if ($image) {
@@ -52,7 +52,7 @@ if (isset($_POST['update_product'])) {
     $image = $_FILES['image']['name']; // Nama gambar
     $category_id = $_POST['category_id'];
     $price = $_POST['price'];
-    $quantity = $_POST['quantity'];
+    $stock = $_POST['stock'];
     $description = $_POST['description'];
 
     // Proses upload gambar
@@ -65,9 +65,9 @@ if (isset($_POST['update_product'])) {
 
     // Cek apakah ada gambar baru yang diupload
     if ($image && move_uploaded_file($_FILES["image"]["tmp_name"], $targetFile)) {
-        $updated = updateProduct($pdo, $id, $name, $image, $category_id, $price, $quantity, $description);
+        $updated = updateProduct($pdo, $id, $name, $image, $category_id, $price, $stock, $description);
     } else {
-        $updated = updateProduct($pdo, $id, $name, null, $category_id, $price, $quantity, $description);
+        $updated = updateProduct($pdo, $id, $name, null, $category_id, $price, $stock, $description);
     }
 
     // Jika berhasil diperbarui, redirect ke manage_produk.php
@@ -154,10 +154,10 @@ if (isset($_GET['id'])) {
                         <input type="text" name="price" class="form-control" value="<?php echo htmlspecialchars($product['price']); ?>" required>
                     </div>
 
-                    <!-- Kuantitas -->
+                    <!-- Stok -->
                     <div class="mb-3">
-                        <label for="quantity" class="form-label">Kuantitas</label>
-                        <input type="number" name="quantity" class="form-control" value="<?php echo htmlspecialchars($product['quantity']); ?>" required>
+                        <label for="stock" class="form-label">Stok</label>
+                        <input type="number" name="stock" class="form-control" value="<?php echo htmlspecialchars($product['stock']); ?>" required>
                     </div>
 
                     <!-- Deskripsi -->
@@ -175,4 +175,3 @@ if (isset($_GET['id'])) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
